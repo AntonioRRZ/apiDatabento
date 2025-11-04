@@ -1,0 +1,91 @@
+# --- SO / Editor ---
+.DS_Store
+Thumbs.db
+*.log
+*.tmp
+~$*
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/tasks.json
+!.vscode/launch.json
+
+# --- Git ---
+.git-credentials
+.gitconfig
+
+# --- Python / Jupyter ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl
+*.egg-info/
+.env
+.venv/
+venv/
+ENV/
+.ipynb_checkpoints/
+.jupyter/
+# Datos/artefactos frecuentes
+data/
+datasets/
+outputs/
+checkpoints/
+wandb/
+mlruns/
+# Cache librerías
+.pytest_cache/
+.mypy_cache/
+pip-wheel-metadata/
+
+# --- .NET / Visual Studio / VS Code ---
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.vcxproj.user
+*.psess
+*.vsp
+*.vspx
+*.vspscc
+*.vssscc
+.vs/
+.nuget/
+packages/
+# Archivos publicados
+publish/
+# Secretos locales
+appsettings.*.local.json
+
+# --- Node / Frontend ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store/
+dist/
+build/
+.cache/
+
+# --- JetBrains / otros IDEs ---
+.idea/
+*.iml
+
+# --- Contenedores / CI ---
+.coverage
+.tox/
+.pyre/
+.hypothesis/
+.eggs/
+.mutmut_cache/
+coverage.xml
+reports/
+# Docker
+docker-data/
+*.pid
+# Salida de Datos
+out/
