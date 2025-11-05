@@ -30,21 +30,29 @@ class SPADOMRenderer:
     def __init__(
         self,
         user_agent: Optional[str] = None,
-        selector_wait: str = "pre code, div.theme-doc-markdown, main, article",
+        post_render_delay_ms: int = 0,
     ) -> None:
+        """Configura el renderer.
+
+        Args:
+            user_agent: Cadena personalizada para la navegación headless.
+            post_render_delay_ms: Tiempo adicional en milisegundos para esperar
+                después de que la red quede ociosa antes de capturar el DOM.
+        """
+
         self.user_agent = user_agent or "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"
-        self.selector_wait = selector_wait
+        self.post_render_delay_ms = max(0, post_render_delay_ms)
 
     async def _render(self, url: str, timeout_ms: int = 60_000) -> RenderedPage:
         async with async_playwright() as p:
             browser = await p.chromium.launch(headless=True)
             page = await browser.new_page(user_agent=self.user_agent)
             await page.goto(url, wait_until="domcontentloaded", timeout=timeout_ms)
-            try:
-                await page.wait_for_selector(self.selector_wait, timeout=30_000)
-            except Exception:
-                # Como última opción espera un instante adicional para dar tiempo a la SPA.
-                await page.wait_for_timeout(1_000)
+            # Espera a que la red quede ociosa para aumentar la probabilidad de que
+            # el contenido dinámico haya sido inyectado en el DOM.
+            await page.wait_for_load_state("networkidle")
+            if self.post_render_delay_ms:
+                await page.wait_for_timeout(self.post_render_delay_ms)
             html = await page.content()
             await browser.close()
             return RenderedPage(url=url, html=html)
