@@ -7,12 +7,13 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Coroutine, Optional
 
+from bs4 import BeautifulSoup
 from playwright.async_api import async_playwright
 
 
 @dataclass
 class RenderedPage:
-    """Contenido renderizado de una página SPA."""
+    """Contenido renderizado de una página SPA sin etiquetas de script o style."""
 
     url: str
     html: str
@@ -24,7 +25,7 @@ class SPADOMRenderer:
     Está pensada para sitios de documentación estilo Docusaurus donde es necesario
     hidratar el contenido dinámico antes de extraer información. La clase ofrece
     métodos asíncronos y síncronos para reutilizar el HTML en memoria o persistirlo
-    en disco.
+    en disco, devolviendo únicamente la estructura HTML sin código CSS o JavaScript.
     """
 
     def __init__(
@@ -54,8 +55,12 @@ class SPADOMRenderer:
             if self.post_render_delay_ms:
                 await page.wait_for_timeout(self.post_render_delay_ms)
             html = await page.content()
+            soup = BeautifulSoup(html, "html.parser")
+            for unwanted in soup(["script", "style"]):
+                unwanted.decompose()
+            clean_html = soup.decode()
             await browser.close()
-            return RenderedPage(url=url, html=html)
+            return RenderedPage(url=url, html=clean_html)
 
     async def fetch_rendered_page(self, url: str, timeout_ms: int = 60_000) -> RenderedPage:
         """Devuelve el DOM renderizado de forma asíncrona."""
