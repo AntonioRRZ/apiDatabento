@@ -72,14 +72,23 @@ class SPADOMRenderer:
 
         return self._run_sync(self.fetch_rendered_page(url, timeout_ms=timeout_ms))
 
-    def render_to_file(self, url: str, out_path: str | Path, timeout_ms: int = 60_000) -> RenderedPage:
+    async def render_to_file_async(
+        self, url: str, out_path: str | Path, timeout_ms: int = 60_000
+    ) -> RenderedPage:
+        """Captura el DOM y lo persiste a disco en contextos asíncronos."""
+
+        rendered = await self.fetch_rendered_page(url, timeout_ms=timeout_ms)
+        self._write_to_file(rendered, out_path)
+        return rendered
+
+    def render_to_file(
+        self, url: str, out_path: str | Path, timeout_ms: int = 60_000
+    ) -> RenderedPage:
         """Guarda el DOM renderizado en un fichero y devuelve el resultado."""
 
-        rendered = self.render_to_memory(url, timeout_ms=timeout_ms)
-        destination = Path(out_path)
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        destination.write_text(rendered.html, encoding="utf-8")
-        return rendered
+        return self._run_sync(
+            self.render_to_file_async(url, out_path, timeout_ms=timeout_ms)
+        )
 
     def _run_sync(self, coroutine: Coroutine[Any, Any, RenderedPage]) -> RenderedPage:
         try:
@@ -90,3 +99,8 @@ class SPADOMRenderer:
             "Ya existe un bucle de eventos en ejecución. Usa 'await fetch_rendered_page' "
             "en entornos asíncronos."
         )
+
+    def _write_to_file(self, rendered: RenderedPage, out_path: str | Path) -> None:
+        destination = Path(out_path)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(rendered.html, encoding="utf-8")
