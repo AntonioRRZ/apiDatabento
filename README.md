@@ -68,3 +68,41 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 ```
+
+## Ejemplos de extracción de enlaces del DOM
+
+### En un notebook de Jupyter
+
+```python
+from scrapApi import SPADOMRenderer, SPASidebarExtractor
+
+renderer = SPADOMRenderer()
+rendered = await renderer.fetch_rendered_page(
+    "https://docs.databento.com/docs/quickstart"
+)
+
+extractor = SPASidebarExtractor(rendered)
+links = await extractor.extract_links_to_memory_async()
+links[:5]
+```
+
+### En un script de Python
+
+```python
+from scrapApi import SPADOMRenderer, SPASidebarExtractor
+
+
+def main() -> None:
+    renderer = SPADOMRenderer()
+    rendered = renderer.render_to_memory(
+        "https://docs.databento.com/docs/quickstart"
+    )
+
+    extractor = SPASidebarExtractor(rendered)
+    links = extractor.extract_links_to_memory()
+    print(f"Se encontraron {len(links)} enlaces del sidebar")
+
+
+if __name__ == "__main__":
+    main()
+```
