@@ -119,6 +119,11 @@ if __name__ == "__main__":
 
 ## Procesado en lote de enlaces con `DOCAPIscraper.py`
 
+Cuando la lista de enlaces proviene del sidebar generado por `scrapApi.py`, los
+`href` suelen ser rutas relativas (por ejemplo, `/docs/quickstart`). Para que
+`batch_scraper.py` pueda navegar a esas rutas, proporciona la `base_url`
+correspondiente (por ejemplo, `https://docs.databento.com`).
+
 ### En un script de Python
 
 ```python
@@ -130,6 +135,7 @@ def main() -> None:
     scrape_links_to_json(
         "out/sidebar_links.json",  # generado previamente con scrapApi.py
         "out/all_pages.json",
+        base_url="https://docs.databento.com",  # resuelve enlaces relativos
     )
 
 
@@ -147,6 +153,6 @@ links_json = "out/sidebar_links.json"
 links_payload = json.loads(open(links_json, "r", encoding="utf-8").read())
 links = links_payload if isinstance(links_payload, list) else links_payload.get("links", [])
 
-pages = scrape_links_to_memory(links)
+pages = scrape_links_to_memory(links, base_url="https://docs.databento.com")
 len(pages)
 ```
