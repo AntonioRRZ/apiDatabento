@@ -3,7 +3,6 @@ import json
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import List, Optional, Dict
-from urllib.parse import urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
 from playwright.async_api import async_playwright
@@ -21,7 +20,6 @@ class CodeExample:
 class PageExtraction:
     url: str
     page_title: str
-    links: List[str]
     examples: List[CodeExample]
 
 
@@ -29,7 +27,6 @@ class SPAPlaywrightScraper:
     """
     Scraper que renderiza con Playwright (Chromium headless), extrae:
       - Título de la página
-      - Todos los enlaces (absolutos)
       - Ejemplos de código: título (h2/h3 cercano), descripción (p/ul/ol entre heading y el bloque) y el snippet.
     Probado con doc sites estilo Docusaurus (Databento, etc.).
     """
@@ -53,25 +50,6 @@ class SPAPlaywrightScraper:
             html = await page.content()
             await browser.close()
             return html
-
-    def _absolute_links(self, soup: BeautifulSoup, base_url: str) -> List[str]:
-        links = []
-        seen = set()
-        for a in soup.select("a[href]"):
-            href = a.get("href")
-            if not href:
-                continue
-            # Evita anchors vacíos/mailto/tel
-            if href.startswith("#") or href.startswith("mailto:") or href.startswith("tel:"):
-                continue
-            abs_url = urljoin(base_url, href)
-            # Normaliza fragmentos (opcional)
-            parsed = urlparse(abs_url)
-            abs_url = parsed._replace(fragment="").geturl()
-            if abs_url not in seen:
-                seen.add(abs_url)
-                links.append(abs_url)
-        return links
 
     def _closest_section_heading(self, node: Tag) -> Optional[Tag]:
         """
@@ -187,13 +165,11 @@ class SPAPlaywrightScraper:
         soup = BeautifulSoup(html, "lxml")
 
         page_title = self._page_title(soup)
-        links = self._absolute_links(soup, url)
         examples = self._extract_examples(soup)
 
         return PageExtraction(
             url=url,
             page_title=page_title,
-            links=links,
             examples=examples,
         )
 
@@ -206,7 +182,6 @@ class SPAPlaywrightScraper:
         payload = {
             "url": data.url,
             "page_title": data.page_title,
-            "links": data.links,  # <- etiqueta a nivel superior con todos los enlaces
             "examples": [asdict(ex) for ex in data.examples],
         }
         out_path = Path(out_path)
